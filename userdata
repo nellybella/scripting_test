@@ -1,0 +1,42 @@
+#!/bin/bash
+
+HOME=/home/bella
+OUTPUT="${HOME}/current_users.log"
+
+exec 1>  $OUTPUT
+NAME=($(getent passwd | cut -d ':' -f 1))
+HOMEDIR=($(getent passwd | cut -d ':' -f 6))
+i=0
+for user in "${NAME[@]}";
+
+do
+echo "$user:${HOMEDIR[i]}"
+((i++))
+done
+
+
+
+
+LOG=/var/log
+HASHFILE="${LOG}/current_users"
+exec 1> $HASHFILE
+
+echo -n $1 | md5sum > $HASHFILE
+
+## LOG THE HASHFILE CHANGES TO A NEW USER CHANGES FILE
+
+NOW=$( date '+%F_%H:%M:%S' )
+CURRENTHASH=$(echo $NOW >> "$HASHFILE"  | md5sum)
+PREVIOUSHASH=$(cat "$HASHFILE")
+USERCHANGES="${LOG}/user_changes"
+exec 1>> $USERCHANGES
+
+if [[ "${CURRENTASH}" != "${PREVIOUSHASH}" ]];
+then
+	echo "DATE TIME changes occurred." >> $USERCHANGES
+	echo -n $1 | md5sum >> $USERCHANGES
+	echo $NOW >> $USERCHANGES
+	echo "" >> $USERCHANGES
+fi
+
+
